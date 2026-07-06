@@ -1,0 +1,47 @@
+# Worklog Bridge local/operator configuration
+config.local.json
+config.*.local.json
+.env
+.env.*
+!.env.example
+
+# Generated worklogs and runtime logs
+outbox/
+logs/
+example-outbox/
+daily_worklog_*.json
+daily_worklog_*.md
+weekly_worklog_*.json
+weekly_worklog_*.md
+*_delivery_*.json
+*_filled.hwp
+*_filled.txt
+
+# Secrets, keys, and personal/unrelated local folders
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+private/
+personal/
+repos/
+
+# Python/editor artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+
+# Local secrets/config
+config.local.json
+.env
+
+# Generated outputs
+outbox/
+logs/
+*.log
+
+# HWP files
+*.hwp
+*.hwpx

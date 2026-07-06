@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-07-03T17:00:00+09:00",
+  "mode": "weekly",
+  "date": "2026-07-03",
+  "week_id": "2026-27",
+  "week_range": "2026.06.29 ~ 2026.07.03",
+  "date_range": {
+    "since": "2026-06-29T00:00:00+09:00",
+    "until": "2026-07-03T23:59:59+09:00"
+  },
+  "included_policy": "company_work_only",
+  "fields": {
+    "DATE": "2026-07-03",
+    "WEEK_RANGE": "2026.06.29 ~ 2026.07.03",
+    "SUMMARY": "이번 주 LoroTopik 관련 업무 4건을 파악하고 진행 내용을 정리했다.",
+    "TASKS": "- SSO/OIDC 인증 구조를 이해했다.\n- TOPIK 모의고사 앱의 다운로드 흐름을 검토했다.\n- 유학생 대상 학습 앱의 방향을 정리했다.\n- 경쟁 서비스 분석 초안을 작성했다.",
+    "BUSINESS_ANALYSIS": "- 경쟁 서비스 분석 초안을 작성했다.",
+    "APP_DIRECTION": "- 유학생 대상 학습 앱의 방향을 정리했다.",
+    "DEV_WORK": "- SSO/OIDC 인증 구조를 이해했다.",
+    "LEARNINGS": "- SSO/OIDC 인증 구조를 이해했다.\n- TOPIK 모의고사 앱의 다운로드 흐름을 검토했다.\n- 경쟁 서비스 분석 초안을 작성했다.",
+    "DIFFICULTIES": "해당 사항 없음",
+    "NEXT_PLAN": "- Flutter 화면 구조의 개선 방향을 다음 주에 검토할 계획이다.",
+    "COMMENT": "해당 사항 없음"
+  },
+  "included_items": [
+    {
+      "source_type": "plan",
+      "date": "2026-07-03",
+      "title": "주간 계획",
+      "summary": "Flutter 화면 구조의 개선 방향을 다음 주에 검토할 계획이다.",
+      "classification": "company_work",
+      "classification_reasons": ["company:flutter", "company:앱 개발 방향"],
+      "short_worklog_draft": "Flutter 화면 구조의 개선 방향을 다음 주에 검토할 계획이다."
+    }
+  ],
+  "excluded_personal_items": [],
+  "uncertain_items": [],
+  "privacy_exclusions_summary": {
+    "excluded_count": 0,
+    "policy": "No source code, full diffs, secrets, credentials, or sensitive company data collected."
+  },
+  "privacy_note": "No source code, full diffs, secrets, credentials, or sensitive company data collected."
+}

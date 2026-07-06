@@ -1,0 +1,39 @@
+{
+  "config_version": 1,
+  "timezone": "Asia/Seoul",
+  "repo_paths": [],
+  "notes": {
+    "enabled": false,
+    "path": ""
+  },
+  "plan": {
+    "enabled": false,
+    "path": ""
+  },
+  "outbox_dir": "/Users/hwangseokbeom/Documents/WorklogBridge/outbox",
+  "log_dir": "/Users/hwangseokbeom/Documents/WorklogBridge/logs",
+  "privacy_exclude_patterns": [
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "**/secrets/**",
+    "**/private/**",
+    "**/personal/**",
+    "*.pem",
+    "*.key"
+  ],
+  "company_keyword_hints": [
+    "LoroTOPIK",
+    "TOPIK"
+  ],
+  "personal_exclude_hints": [
+    "TokenForge",
+    "HWANGTODO",
+    "Lovey Moment",
+    "personal",
+    "private",
+    "playground"
+  ],
+  "setup_todo": "No LoroTOPIK Git repository was discovered. Add one verified company repo path before preflight."
+}

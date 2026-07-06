@@ -1,0 +1,42 @@
+{
+  "config_version": 1,
+  "timezone": "Asia/Seoul",
+  "repo_paths": [
+    "/Users/hwangseokbeom/Documents/GitHub/lorotopik",
+    "/Users/hwangseokbeom/Documents/GitHub/lorotopik-api",
+    "/Users/hwangseokbeom/Documents/GitHub/loro-manager"
+  ],
+  "notes": {
+    "enabled": false,
+    "path": ""
+  },
+  "plan": {
+    "enabled": false,
+    "path": ""
+  },
+  "outbox_dir": "/Users/hwangseokbeom/Documents/WorklogBridge/outbox",
+  "log_dir": "/Users/hwangseokbeom/Documents/WorklogBridge/logs",
+  "privacy_exclude_patterns": [
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "**/secrets/**",
+    "**/private/**",
+    "**/personal/**",
+    "*.pem",
+    "*.key"
+  ],
+  "company_keyword_hints": [
+    "LoroTOPIK",
+    "TOPIK"
+  ],
+  "personal_exclude_hints": [
+    "TokenForge",
+    "HWANGTODO",
+    "Lovey Moment",
+    "personal",
+    "private",
+    "playground"
+  ]
+}

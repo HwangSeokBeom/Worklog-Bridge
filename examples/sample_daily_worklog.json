@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-07-02T17:00:00+09:00",
+  "mode": "daily",
+  "date": "2026-07-02",
+  "week_id": "2026-27",
+  "week_range": "2026.06.29 ~ 2026.07.03",
+  "date_range": {
+    "since": "2026-07-02T00:00:00+09:00",
+    "until": "2026-07-02T23:59:59+09:00"
+  },
+  "included_policy": "company_work_only",
+  "fields": {
+    "DATE": "2026-07-02",
+    "WEEK_RANGE": "2026.06.29 ~ 2026.07.03",
+    "SUMMARY": "오늘 LoroTopik 관련 업무 3건을 파악하고 진행 내용을 정리했다.",
+    "TASKS": "- LoroTopik OIDC 인증 흐름을 검토했다.\n- Flutter 모의고사 다운로드 구조를 파악했다.\n- 경쟁 서비스 분석 초안을 작성했다.",
+    "BUSINESS_ANALYSIS": "- 경쟁 서비스 분석 초안을 작성했다.",
+    "APP_DIRECTION": "해당 사항 없음",
+    "DEV_WORK": "- LoroTopik OIDC 인증 흐름을 검토했다.\n- Flutter 모의고사 다운로드 구조를 파악했다.",
+    "LEARNINGS": "- LoroTopik OIDC 인증 흐름을 검토했다.\n- Flutter 모의고사 다운로드 구조를 파악했다.\n- 경쟁 서비스 분석 초안을 작성했다.",
+    "DIFFICULTIES": "해당 사항 없음",
+    "NEXT_PLAN": "해당 사항 없음",
+    "COMMENT": "- LoroTopik 로그인 개선 방향을 다음 검토 항목으로 정리했다."
+  },
+  "included_items": [
+    {
+      "source_type": "note",
+      "date": "2026-07-02",
+      "title": "업무 메모",
+      "summary": "LoroTopik OIDC 인증 흐름을 검토했다.",
+      "classification": "company_work",
+      "classification_reasons": ["company:lorotopik", "company:oidc"],
+      "short_worklog_draft": "LoroTopik OIDC 인증 흐름을 검토했다."
+    },
+    {
+      "source_type": "comment",
+      "date": "2026-07-02",
+      "title": "수동 코멘트",
+      "summary": "LoroTopik 로그인 개선 방향을 다음 검토 항목으로 정리했다.",
+      "classification": "company_work",
+      "classification_reasons": ["company:lorotopik"],
+      "short_worklog_draft": "LoroTopik 로그인 개선 방향을 다음 검토 항목으로 정리했다."
+    }
+  ],
+  "excluded_personal_items": [
+    {
+      "source_type": "note",
+      "project_name": "TokenForge",
+      "classification": "personal_work",
+      "classification_reason": "personal project signal; details omitted"
+    }
+  ],
+  "uncertain_items": [
+    {
+      "source_type": "note",
+      "date": "2026-07-02",
+      "title": "일반 메모",
+      "summary": "화면 구성을 검토했다.",
+      "classification": "uncertain",
+      "classification_reasons": ["no_strong_signal"],
+      "short_worklog_draft": "화면 구성을 검토했다."
+    }
+  ],
+  "privacy_exclusions_summary": {
+    "excluded_count": 0,
+    "policy": "No source code, full diffs, secrets, credentials, or sensitive company data collected."
+  },
+  "privacy_note": "No source code, full diffs, secrets, credentials, or sensitive company data collected."
+}

@@ -1,0 +1,54 @@
+{
+  "config_version": 1,
+  "timezone": "Asia/Seoul",
+  "repo_paths": [
+    "/Users/YOUR_NAME/path/to/LoroTOPIK"
+  ],
+  "notes": {
+    "enabled": true,
+    "path": "/Users/YOUR_NAME/Documents/LoroTOPIKNotes"
+  },
+  "plan": {
+    "enabled": true,
+    "path": "/Users/YOUR_NAME/Documents/LoroTOPIKNotes/weekly_plan.md"
+  },
+  "outbox_dir": "/Users/YOUR_NAME/Documents/WorklogBridge/outbox",
+  "log_dir": "/Users/YOUR_NAME/Documents/WorklogBridge/logs",
+  "privacy_exclude_patterns": [
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "**/secrets/**",
+    "**/private/**",
+    "**/personal/**",
+    "*.pem",
+    "*.key"
+  ],
+  "company_keyword_hints": [
+    "LoroTOPIK",
+    "TOPIK"
+  ],
+  "personal_exclude_hints": [
+    "TokenForge",
+    "HWANGTODO",
+    "Lovey Moment",
+    "personal",
+    "private",
+    "playground"
+  ],
+  "gmail_delivery": {
+    "enabled": false,
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 465,
+    "sender_email_env": "WORKLOGBRIDGE_GMAIL_ADDRESS",
+    "app_password_env": "WORKLOGBRIDGE_GMAIL_APP_PASSWORD",
+    "recipient_email_env": "WORKLOGBRIDGE_GMAIL_RECIPIENT",
+    "attach_markdown": true,
+    "attach_json": true,
+    "include_markdown_body": true,
+    "max_body_chars": 12000,
+    "fail_collection_on_delivery_error": false,
+    "dedupe": true
+  }
+}
