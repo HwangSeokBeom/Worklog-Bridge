@@ -8,6 +8,14 @@
     "enabled": true,
     "path": "/Users/YOUR_NAME/Documents/LoroTOPIKNotes"
   },
+  "manual_activity": {
+    "enabled": true,
+    "paths": [
+      "/Users/YOUR_NAME/Documents/WorklogBridge/manual",
+      "/Users/YOUR_NAME/Documents/WorklogBridge/activities",
+      "/Users/YOUR_NAME/Documents/WorklogBridge/notes"
+    ]
+  },
   "plan": {
     "enabled": true,
     "path": "/Users/YOUR_NAME/Documents/LoroTOPIKNotes/weekly_plan.md"

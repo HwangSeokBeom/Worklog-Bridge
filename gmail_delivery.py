@@ -400,7 +400,7 @@ def _summary_values(payload: Mapping[str, object]) -> tuple[str, str]:
             activity = _safe_multiline(raw_activity, label="Activity", max_length=1000)
     fields = payload.get("fields")
     if isinstance(fields, Mapping):
-        raw_summary = fields.get("SUMMARY")
+        raw_summary = fields.get("WORK_CONTENT") or fields.get("SUMMARY")
         if isinstance(raw_summary, str) and raw_summary.strip():
             summary = _safe_multiline(raw_summary, label="Summary", max_length=2000)
     return activity, summary

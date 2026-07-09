@@ -12,6 +12,7 @@ import fnmatch
 import json
 import os
 import plistlib
+import re
 import shlex
 import subprocess
 import sys
@@ -50,6 +51,7 @@ LAUNCHD_LABEL = "com.worklogbridge.lorolog.daily"
 INSTALLED_PLIST = Path(f"~/Library/LaunchAgents/{LAUNCHD_LABEL}.plist").expanduser()
 ALLOWED_NOTE_SUFFIXES = {".md", ".txt"}
 ALLOWED_PLAN_SUFFIXES = {".md", ".txt", ".json"}
+MANUAL_ACTIVITY_SUFFIXES = (".md", ".txt")
 COMPLETION_MESSAGE = "오늘의 LoroTopik 근무일지 초안 생성 완료. 검토 후 Windows PC로 전달하세요."
 DEFAULT_PRIVACY_EXCLUDE_PATTERNS: tuple[str, ...] = (
     ".env", ".env.*", "**/.env", "**/.env.*", "**/secrets/**",
@@ -59,6 +61,18 @@ FORBIDDEN_CONFIG_KEYS = {
     "token", "api_key", "access_key", "access_token", "refresh_token", "password", "passwd",
     "secret", "client_secret", "private_key", "webhook_url",
 }
+
+
+def default_manual_activity_dirs() -> list[Path]:
+    """Supported date-named manual activity directories, in collection priority order."""
+
+    return [
+        Path("~/Documents/WorklogBridge/manual").expanduser(),
+        Path("~/Documents/WorklogBridge/activities").expanduser(),
+        Path("~/Documents/WorklogBridge/notes").expanduser(),
+        PROJECT_ROOT / "manual_activity",
+        PROJECT_ROOT / "worklog_notes",
+    ]
 
 
 @dataclass
@@ -75,6 +89,7 @@ class CollectorConfig:
     config_exists: bool = False
     config_error: Optional[str] = None
     repos: list[Path] = field(default_factory=list)
+    manual_activity_dirs: list[Path] = field(default_factory=list)
     notes_dir: Optional[Path] = None
     plan_file: Optional[Path] = None
     notes_enabled: bool = False
@@ -375,6 +390,74 @@ def collect_text_file(
     return items
 
 
+_MANUAL_METADATA_LINE = re.compile(
+    r"^(?:date|날짜)\s*[:：]\s*\d{4}-\d{2}-\d{2}\s*$",
+    re.IGNORECASE,
+)
+
+
+def manual_activity_candidate_paths(
+    directories: Iterable[Path], target_day: date
+) -> list[Path]:
+    """Return date-named manual activity files in deterministic priority order."""
+
+    seen: set[Path] = set()
+    result: list[Path] = []
+    stem = target_day.isoformat()
+    for directory in directories:
+        base = directory.expanduser()
+        for suffix in MANUAL_ACTIVITY_SUFFIXES:
+            path = (base / f"{stem}{suffix}").resolve()
+            if path not in seen:
+                seen.add(path)
+                result.append(path)
+    return result
+
+
+def collect_manual_activity_files(
+    directories: Iterable[Path],
+    target_day: date,
+    *,
+    stats: Optional[CollectionStats] = None,
+    privacy_exclude_patterns: Iterable[str] = DEFAULT_PRIVACY_EXCLUDE_PATTERNS,
+) -> list[dict[str, object]]:
+    """Collect trusted date-named manual activity files without relying on mtime.
+
+    A manual activity file represents the target date by filename, so it may be
+    written or amended after work hours.  Content still goes through the same
+    privacy-oriented line filtering used for notes/plans.
+    """
+
+    stats = stats or CollectionStats()
+    items: list[dict[str, object]] = []
+    for path in manual_activity_candidate_paths(directories, target_day):
+        if not path.is_file():
+            continue
+        if _matches_privacy_exclude(path, privacy_exclude_patterns):
+            stats.excluded()
+            continue
+        modified = datetime.fromtimestamp(path.stat().st_mtime).astimezone().isoformat(timespec="seconds")
+        for text, tags, metadata in _candidate_lines(path, source_type="manual_activity", stats=stats):
+            if _MANUAL_METADATA_LINE.match(text):
+                continue
+            items.append(
+                {
+                    "source_type": "manual_activity",
+                    "date": target_day.isoformat(),
+                    "modified_at": modified,
+                    "title": metadata.get("title") or path.stem,
+                    "summary": text,
+                    "source_file": path.name,
+                    "source_path": str(path),
+                    "tags": tags,
+                    "frontmatter": metadata,
+                    "classification_hint": COMPANY_WORK,
+                    "source_priority": 1,
+                }
+            )
+    return items
+
+
 def collect_notes(
     directory: Path,
     since: datetime,
@@ -428,7 +511,8 @@ def classify_collected(
     personal: list[dict[str, object]] = []
     uncertain: list[dict[str, object]] = []
     for item in items:
-        if item.get("source_type") == "git":
+        source_type = str(item.get("source_type", "")).casefold()
+        if source_type == "git":
             text = " ".join(
                 str(item.get(key, ""))
                 for key in ("title", "summary", "repo_name", "changed_files")
@@ -436,22 +520,46 @@ def classify_collected(
             path = str(item.get("repo_path") or "")
         else:
             text = str(item.get("summary", ""))
-            path = ""
+            path = str(item.get("source_path") or "")
         result = classify_with_reasons(
             text,
             path or None,
             company_keyword_hints=company_keyword_hints,
             personal_keyword_hints=personal_keyword_hints,
         )
-        item["classification"] = result.category
-        item["classification_reasons"] = result.reasons
-        if result.category == COMPANY_WORK:
+        category = result.category
+        reasons = result.reasons
+        if (
+            source_type == "manual_activity"
+            and item.get("classification_hint") == COMPANY_WORK
+            and category != PERSONAL_WORK
+        ):
+            category = COMPANY_WORK
+            reasons = [*reasons, "manual_activity:trusted_date_path"]
+        item["classification"] = category
+        item["classification_reasons"] = reasons
+        if category == COMPANY_WORK:
             included.append(item)
-        elif result.category == PERSONAL_WORK:
+        elif category == PERSONAL_WORK:
             personal.append(item)
         else:
             uncertain.append(item)
     return included, personal, uncertain
+
+
+def _dedupe_collected_items(items: Iterable[dict[str, object]]) -> list[dict[str, object]]:
+    result: list[dict[str, object]] = []
+    seen: set[tuple[str, str]] = set()
+    for item in items:
+        summary = str(item.get("summary", "")).strip()
+        source_path = str(item.get("source_path", "")).strip()
+        source_type = str(item.get("source_type", "")).strip()
+        key = (source_path or source_type, summary)
+        if summary and key in seen:
+            continue
+        seen.add(key)
+        result.append(item)
+    return result
 
 
 def collect_configured_sources(
@@ -467,38 +575,17 @@ def collect_configured_sources(
     stats = stats or CollectionStats()
     items: list[dict[str, object]] = []
     warnings: list[str] = []
-    for repo in config.repos:
-        repo_classification = classify_with_reasons(
-            repo.name,
-            str(repo),
-            company_keyword_hints=config.company_keyword_hints,
-            personal_keyword_hints=config.personal_exclude_hints,
+    try:
+        items.extend(
+            collect_manual_activity_files(
+                config.manual_activity_dirs,
+                until.date(),
+                stats=stats,
+                privacy_exclude_patterns=config.privacy_exclude_patterns,
+            )
         )
-        if repo_classification.category == PERSONAL_WORK:
-            items.append(
-                {
-                    "source_type": "repository",
-                    "repo_name": repo.name,
-                    "repo_path": str(repo),
-                    "summary": repo.name,
-                    "classification": PERSONAL_WORK,
-                    "classification_reasons": repo_classification.reasons,
-                }
-            )
-            warnings.append(f"개인 repo는 commit metadata도 수집하지 않았습니다: {repo}")
-            continue
-        try:
-            items.extend(
-                collect_git_repo(
-                    repo,
-                    since,
-                    until,
-                    stats=stats,
-                    privacy_exclude_patterns=config.privacy_exclude_patterns,
-                )
-            )
-        except (OSError, RuntimeError, ValueError) as exc:
-            warnings.append(str(exc))
+    except (OSError, ValueError) as exc:
+        warnings.append(str(exc))
     if config.notes_enabled and config.notes_dir:
         try:
             items.extend(
@@ -535,7 +622,39 @@ def collect_configured_sources(
             items.append(item)
         else:
             warnings.append("민감정보가 감지된 --comment 한 건을 제외했습니다.")
-    return items, warnings
+    for repo in config.repos:
+        repo_classification = classify_with_reasons(
+            repo.name,
+            str(repo),
+            company_keyword_hints=config.company_keyword_hints,
+            personal_keyword_hints=config.personal_exclude_hints,
+        )
+        if repo_classification.category == PERSONAL_WORK:
+            items.append(
+                {
+                    "source_type": "repository",
+                    "repo_name": repo.name,
+                    "repo_path": str(repo),
+                    "summary": repo.name,
+                    "classification": PERSONAL_WORK,
+                    "classification_reasons": repo_classification.reasons,
+                }
+            )
+            warnings.append(f"개인 repo는 commit metadata도 수집하지 않았습니다: {repo}")
+            continue
+        try:
+            items.extend(
+                collect_git_repo(
+                    repo,
+                    since,
+                    until,
+                    stats=stats,
+                    privacy_exclude_patterns=config.privacy_exclude_patterns,
+                )
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            warnings.append(str(exc))
+    return _dedupe_collected_items(items), warnings
 
 
 def _paths_from_value(value: str) -> list[Path]:
@@ -593,6 +712,18 @@ def load_operator_config(config_path: Path) -> dict[str, object]:
             raise ValueError(f"config의 {section_name}는 enabled boolean을 포함한 object여야 합니다.")
         if section.get("enabled") and not isinstance(section.get("path"), str):
             raise ValueError(f"config의 {section_name}.path가 필요합니다.")
+    manual_section = payload.get("manual_activity")
+    if manual_section is not None:
+        if not isinstance(manual_section, Mapping) or not isinstance(manual_section.get("enabled"), bool):
+            raise ValueError("config의 manual_activity는 enabled boolean을 포함한 object여야 합니다.")
+        raw_paths = manual_section.get("paths", [])
+        raw_path = manual_section.get("path")
+        if raw_path is not None and not isinstance(raw_path, str):
+            raise ValueError("config의 manual_activity.path는 문자열이어야 합니다.")
+        if not isinstance(raw_paths, list) or not all(isinstance(entry, str) for entry in raw_paths):
+            raise ValueError("config의 manual_activity.paths는 문자열 배열이어야 합니다.")
+        if manual_section.get("enabled") and not raw_path and not raw_paths:
+            raise ValueError("config의 manual_activity.enabled=true에는 path 또는 paths가 필요합니다.")
     configured_outbox = payload.get("outbox_dir", payload.get("outbox_path"))
     if not isinstance(configured_outbox, str) or not configured_outbox.strip():
         raise ValueError("config의 outbox_dir 문자열이 필요합니다.")
@@ -682,6 +813,34 @@ def resolve_collector_config(args: argparse.Namespace) -> CollectorConfig:
         plist_value = str(plist_env.get(environment_name, ""))
         return (Path(plist_value).expanduser(), "launchd_plist") if plist_value else (None, "not_configured")
 
+    raw_manual = config_payload.get("manual_activity", {})
+    manual_config = raw_manual if isinstance(raw_manual, Mapping) else {}
+    if getattr(args, "manual_activity_dir", None):
+        manual_activity_dirs = list(args.manual_activity_dir)
+        sources["manual_activity_dirs"] = "cli"
+    elif manual_config:
+        if bool(manual_config.get("enabled", False)):
+            raw_values: list[str] = []
+            if isinstance(manual_config.get("path"), str):
+                raw_values.append(str(manual_config["path"]))
+            if isinstance(manual_config.get("paths"), list):
+                raw_values.extend(
+                    str(value) for value in manual_config["paths"]
+                    if isinstance(value, str) and value.strip()
+                )
+            manual_activity_dirs = [
+                _path_from_config(value, configured_path)
+                for value in raw_values
+                if value.strip()
+            ]
+            sources["manual_activity_dirs"] = "config"
+        else:
+            manual_activity_dirs = []
+            sources["manual_activity_dirs"] = "config_disabled"
+    else:
+        manual_activity_dirs = default_manual_activity_dirs()
+        sources["manual_activity_dirs"] = "default_candidates"
+
     raw_notes = config_payload.get("notes", {})
     notes_config = raw_notes if isinstance(raw_notes, Mapping) else {}
     notes_enabled = bool(notes_config.get("enabled", False))
@@ -753,6 +912,9 @@ def resolve_collector_config(args: argparse.Namespace) -> CollectorConfig:
         config_exists=configured_path.is_file(),
         config_error=config_error,
         repos=[path.expanduser().resolve() for path in repos],
+        manual_activity_dirs=[
+            path.expanduser().resolve() for path in manual_activity_dirs
+        ],
         notes_dir=notes_dir.expanduser().resolve() if notes_dir else None,
         plan_file=plan_file.expanduser().resolve() if plan_file else None,
         notes_enabled=notes_enabled,
@@ -936,6 +1098,17 @@ def print_diagnostics(config: CollectorConfig, *, preflight_only: bool = False) 
             )
         else:
             add("OK", f"company repo: {repo}")
+
+    existing_manual_dirs = [
+        path for path in config.manual_activity_dirs
+        if path.is_dir() and not _matches_privacy_exclude(path, config.privacy_exclude_patterns)
+    ]
+    if existing_manual_dirs:
+        add("OK", "manual activity dirs: " + ", ".join(str(path) for path in existing_manual_dirs))
+    elif config.manual_activity_dirs:
+        add("OK", "manual activity dirs: 후보 경로는 있으나 현재 존재하는 디렉터리가 없습니다.")
+    else:
+        add("OK", "manual activity dirs: disabled")
 
     if config.notes_enabled:
         if config.notes_dir and _matches_privacy_exclude(config.notes_dir, config.privacy_exclude_patterns):
@@ -1284,10 +1457,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="로컬 config JSON (기본: config.local.json, launchd는 절대 경로 사용)",
     )
     parser.add_argument("--repo", action="append", default=[], type=Path, help="Git 저장소(여러 번 지정 가능)")
+    parser.add_argument(
+        "--manual-activity-dir",
+        action="append",
+        default=[],
+        type=Path,
+        help="YYYY-MM-DD.md/.txt 수동 업무 파일 디렉터리(여러 번 지정 가능)",
+    )
     parser.add_argument("--notes-dir", type=Path, help="업무 메모 .md/.txt 디렉터리")
     parser.add_argument("--plan-file", type=Path, help="업무 계획 .md/.txt/.json 파일")
     parser.add_argument("--comment", action="append", default=[], help="수동 업무 코멘트(여러 번 지정 가능)")
     parser.add_argument("--mode", choices=("daily", "weekly"), default="daily")
+    parser.add_argument(
+        "--draft-style",
+        choices=("paragraph", "sectioned"),
+        default="paragraph",
+        help="HWP fields 초안 형식(기본: 자연스러운 문단형)",
+    )
     parser.add_argument("--since", help="수집 시작일/시각 (포함)")
     parser.add_argument("--until", help="수집 종료일/시각 (포함)")
     parser.add_argument("--out-dir", type=Path)
@@ -1434,6 +1620,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         privacy_exclusions_count=stats.privacy_exclusions,
         date_range=(since.isoformat(), until.isoformat()),
         collected_item_count=len(all_items),
+        draft_style=args.draft_style,
     )
     json_path, markdown_path = expected_output_paths(worklog, config.out_dir)
     if args.dry_run:
