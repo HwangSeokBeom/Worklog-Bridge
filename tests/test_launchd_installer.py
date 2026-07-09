@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 INSTALLER = Path(__file__).resolve().parents[1] / "scripts" / "install_macos_launchd.sh"
-COLLECTOR = Path(__file__).resolve().parents[1] / "mac_collect_lorotopik_worklog.py"
-LABEL = "com.worklogbridge.lorolog.daily.plist"
+COLLECTOR = Path(__file__).resolve().parents[1] / "worklog_collector.py"
+LABEL = "com.worklogbridge.daily.plist"
 
 
 def _seoul_environment(tmp_path, home):

@@ -55,6 +55,30 @@ def test_hwp_dry_run_input_requires_all_fields(tmp_path):
         load_fields(json_path)
 
 
+def test_hwp_loader_accepts_new_paragraph_fields_and_derives_legacy_aliases(tmp_path):
+    json_path = tmp_path / "paragraph.json"
+    json_path.write_text(
+        json.dumps(
+            {
+                "fields": {
+                    "DATE": "2026-07-06",
+                    "WEEK_RANGE": "2026.07.06 ~ 2026.07.10",
+                    "WORK_CONTENT": "LoroTOPIK 인증 흐름을 검토하였다.",
+                    "NEXT_PLAN": "로그인 연동 방안을 추가로 검토할 예정이다.",
+                    "COMMENT": "",
+                }
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    fields = load_fields(json_path)
+    assert fields["WORK_CONTENT"] == "LoroTOPIK 인증 흐름을 검토하였다."
+    assert fields["SUMMARY"] == fields["WORK_CONTENT"]
+    assert fields["TASKS"] == fields["WORK_CONTENT"]
+
+
 def test_hwp_output_rejects_credential_path(tmp_path):
     with pytest.raises(ValueError, match="unsafe path"):
         validate_hwp_output_path(tmp_path / "secrets" / "filled.hwp")

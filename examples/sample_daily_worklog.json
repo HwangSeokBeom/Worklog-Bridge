@@ -1,6 +1,7 @@
 {
   "generated_at": "2026-07-02T17:00:00+09:00",
   "mode": "daily",
+  "draft_style": "paragraph",
   "date": "2026-07-02",
   "week_id": "2026-27",
   "week_range": "2026.06.29 ~ 2026.07.03",
@@ -12,15 +13,16 @@
   "fields": {
     "DATE": "2026-07-02",
     "WEEK_RANGE": "2026.06.29 ~ 2026.07.03",
-    "SUMMARY": "오늘 LoroTopik 관련 업무 3건을 파악하고 진행 내용을 정리했다.",
-    "TASKS": "- LoroTopik OIDC 인증 흐름을 검토했다.\n- Flutter 모의고사 다운로드 구조를 파악했다.\n- 경쟁 서비스 분석 초안을 작성했다.",
-    "BUSINESS_ANALYSIS": "- 경쟁 서비스 분석 초안을 작성했다.",
-    "APP_DIRECTION": "해당 사항 없음",
-    "DEV_WORK": "- LoroTopik OIDC 인증 흐름을 검토했다.\n- Flutter 모의고사 다운로드 구조를 파악했다.",
-    "LEARNINGS": "- LoroTopik OIDC 인증 흐름을 검토했다.\n- Flutter 모의고사 다운로드 구조를 파악했다.\n- 경쟁 서비스 분석 초안을 작성했다.",
-    "DIFFICULTIES": "해당 사항 없음",
-    "NEXT_PLAN": "해당 사항 없음",
-    "COMMENT": "- LoroTopik 로그인 개선 방향을 다음 검토 항목으로 정리했다."
+    "WORK_CONTENT": "LoroTopik OIDC 인증 흐름과 Flutter 기반 모의고사 다운로드 구조를 검토하였다. 경쟁 서비스 분석 초안을 작성하며 서비스 개선에 참고할 내용을 정리하였다.",
+    "SUMMARY": "LoroTopik OIDC 인증 흐름과 Flutter 기반 모의고사 다운로드 구조를 검토하였다. 경쟁 서비스 분석 초안을 작성하며 서비스 개선에 참고할 내용을 정리하였다.",
+    "TASKS": "LoroTopik OIDC 인증 흐름과 Flutter 기반 모의고사 다운로드 구조를 검토하였다. 경쟁 서비스 분석 초안을 작성하며 서비스 개선에 참고할 내용을 정리하였다.",
+    "BUSINESS_ANALYSIS": "경쟁 서비스 분석 초안을 작성하였다.",
+    "APP_DIRECTION": "",
+    "DEV_WORK": "LoroTopik OIDC 인증 흐름과 Flutter 기반 모의고사 다운로드 구조를 검토하였다.",
+    "LEARNINGS": "LoroTopik OIDC 인증 흐름과 모의고사 다운로드 구조를 파악하였다.",
+    "DIFFICULTIES": "",
+    "NEXT_PLAN": "LoroTopik 로그인 개선 방향을 다음 검토 항목으로 정리하였다.",
+    "COMMENT": "LoroTopik 로그인 개선 방향을 다음 검토 항목으로 정리하였다."
   },
   "included_items": [
     {

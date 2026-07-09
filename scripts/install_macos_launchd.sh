@@ -1,11 +1,11 @@
 #!/bin/zsh
 set -euo pipefail
 
-LABEL="com.worklogbridge.lorolog.daily"
+LABEL="com.worklogbridge.daily"
 SCRIPT_DIR="${0:A:h}"
 PROJECT_DIR="${SCRIPT_DIR:h}"
 SOURCE_PLIST="$PROJECT_DIR/launchd/$LABEL.plist"
-COLLECTOR="$PROJECT_DIR/mac_collect_lorotopik_worklog.py"
+COLLECTOR="$PROJECT_DIR/worklog_collector.py"
 TARGET_DIR="$HOME/Library/LaunchAgents"
 TARGET_PLIST="$TARGET_DIR/$LABEL.plist"
 CONFIG_PATH="$PROJECT_DIR/config.local.json"

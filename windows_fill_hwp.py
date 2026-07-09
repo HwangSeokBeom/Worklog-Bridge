@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 from privacy_guard import sanitize_text
-from worklog_draft_generator import FIELD_NAMES
+from worklog_draft_generator import FIELD_NAMES, LEGACY_FIELD_NAMES, PARAGRAPH_FIELD_NAMES
 
 
 def parse_bool(value: str) -> bool:
@@ -37,12 +37,17 @@ def load_fields(json_path: Path) -> dict[str, str]:
     raw_fields = payload.get("fields")
     if not isinstance(raw_fields, Mapping):
         raise ValueError("입력 JSON에 fields 객체가 없습니다.")
-    missing = [name for name in FIELD_NAMES if name not in raw_fields]
-    if missing:
+    common_missing = [name for name in ("DATE", "WEEK_RANGE") if name not in raw_fields]
+    has_content = bool(raw_fields.get("WORK_CONTENT") or raw_fields.get("SUMMARY"))
+    if common_missing or not has_content:
+        missing = [*common_missing, *([] if has_content else ["WORK_CONTENT 또는 SUMMARY"])]
         raise ValueError(f"입력 JSON fields에 필수 필드가 없습니다: {', '.join(missing)}")
+    work_content = str(raw_fields.get("WORK_CONTENT") or raw_fields.get("SUMMARY") or "")
     fields: dict[str, str] = {}
     for name in FIELD_NAMES:
         raw = raw_fields.get(name, "")
+        if not raw and name in {"WORK_CONTENT", "SUMMARY", "TASKS"}:
+            raw = work_content
         fields[name] = sanitize_text(str(raw), max_lines=200, max_length=1000)
     return fields
 
@@ -149,19 +154,28 @@ def validate_template_fields(template: Path, *, visible: bool) -> tuple[set[str]
 
 
 def print_template_field_report(detected: set[str], backend: str) -> int:
-    required = set(FIELD_NAMES)
-    missing = required - detected
+    paragraph_required = set(PARAGRAPH_FIELD_NAMES)
+    legacy_required = set(LEGACY_FIELD_NAMES)
+    paragraph_missing = paragraph_required - detected
+    legacy_missing = legacy_required - detected
+    template_valid = not paragraph_missing or not legacy_missing
+    missing = set() if template_valid else min(
+        (paragraph_missing, legacy_missing), key=lambda values: (len(values), sorted(values))
+    )
     report = {
         "backend": backend,
         "detected_fields": sorted(detected),
-        "required_fields": list(FIELD_NAMES),
+        "required_field_sets": {
+            "paragraph": list(PARAGRAPH_FIELD_NAMES),
+            "legacy": list(LEGACY_FIELD_NAMES),
+        },
         "missing_required_fields": sorted(missing),
-        "unexpected_fields": sorted(detected - required),
-        "template_valid": not missing,
+        "unexpected_fields": sorted(detected - set(FIELD_NAMES)),
+        "template_valid": template_valid,
         "output_written": False,
     }
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if not missing else 3
+    return 0 if template_valid else 3
 
 
 def fill_with_pyhwpx(
@@ -247,14 +261,16 @@ def fill_with_win32com(
 
 def fallback_text(fields: Mapping[str, str]) -> str:
     labels = {
-        "DATE": "날짜", "WEEK_RANGE": "주간 범위", "SUMMARY": "업무 요약",
+        "DATE": "날짜", "WEEK_RANGE": "주간 범위", "WORK_CONTENT": "근무 내용", "SUMMARY": "업무 요약",
         "TASKS": "수행 업무", "BUSINESS_ANALYSIS": "사업 분석", "APP_DIRECTION": "앱 개발 방향",
         "DEV_WORK": "개발 업무", "LEARNINGS": "학습/파악 내용", "DIFFICULTIES": "어려웠던 점",
         "NEXT_PLAN": "다음 계획", "COMMENT": "코멘트",
     }
     lines = ["LoroTopik 근무일지 붙여넣기용 fallback", ""]
     for name in FIELD_NAMES:
-        lines.extend((f"[{labels[name]} / {name}]", fields.get(name, "") or "해당 사항 없음", ""))
+        value = fields.get(name, "").strip()
+        if value:
+            lines.extend((f"[{labels[name]} / {name}]", value, ""))
     return "\n".join(lines)
 
 

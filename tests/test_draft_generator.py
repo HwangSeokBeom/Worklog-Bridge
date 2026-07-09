@@ -85,7 +85,7 @@ def test_uncertain_can_only_enter_fields_when_explicitly_enabled():
     assert draft["included_policy"] == "company_work_plus_explicit_uncertain"
 
 
-def test_zero_activity_wording_does_not_imply_work_was_collected():
+def test_zero_activity_diagnostics_stay_out_of_hwp_fields():
     draft = generate_worklog(
         [],
         target_date="2026-07-03",
@@ -96,7 +96,11 @@ def test_zero_activity_wording_does_not_imply_work_was_collected():
     assert collection["collected_item_count"] == 0
     assert collection["included_company_work_count"] == 0
     assert collection["git_activity_status"] == "EXPECTED_ZERO_ACTIVITY"
-    assert "Git 활동이 발견되지 않았습니다" in draft["fields"]["SUMMARY"]
+    rendered_fields = json.dumps(draft["fields"], ensure_ascii=False)
+    assert "Git 활동이 발견되지 않았습니다" not in rendered_fields
+    assert "포함된 회사 업무는 0건" not in rendered_fields
+    assert "EXPECTED_ZERO_ACTIVITY" not in rendered_fields
+    assert "해당 사항 없음" not in rendered_fields
     markdown = render_markdown(draft)
     assert "Git 활동 상태: EXPECTED_ZERO_ACTIVITY (0건)" in markdown
     assert "포함된 회사 업무: 0건" in markdown

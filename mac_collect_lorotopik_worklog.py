@@ -47,7 +47,7 @@ DEFAULT_OUT_DIR = Path("~/Documents/WorklogBridge/outbox").expanduser()
 DEFAULT_LOG_DIR = Path("~/Documents/WorklogBridge/logs").expanduser()
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config.local.json"
-LAUNCHD_LABEL = "com.worklogbridge.lorolog.daily"
+LAUNCHD_LABEL = "com.worklogbridge.daily"
 INSTALLED_PLIST = Path(f"~/Library/LaunchAgents/{LAUNCHD_LABEL}.plist").expanduser()
 ALLOWED_NOTE_SUFFIXES = {".md", ".txt"}
 ALLOWED_PLAN_SUFFIXES = {".md", ".txt", ".json"}
@@ -1178,7 +1178,7 @@ def print_diagnostics(config: CollectorConfig, *, preflight_only: bool = False) 
                 setup_command = shlex.join(
                     [
                         sys.executable,
-                        str(PROJECT_ROOT / "mac_collect_lorotopik_worklog.py"),
+                        str(PROJECT_ROOT / "worklog_collector.py"),
                         "--config",
                         str(config.config_path),
                         "--setup-gmail-keychain",
